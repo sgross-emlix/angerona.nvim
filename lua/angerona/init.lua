@@ -16,11 +16,17 @@ local function main()
   vim.api.nvim_win_set_cursor(0, { vim.api.nvim_buf_line_count(buf), 0 })
 end
 
+local function exit()
+  print("Bye from our plugin")
+end
+
 local function setup()
   local augroup = vim.api.nvim_create_augroup("ScratchBuffer", { clear = true })
 
   vim.api.nvim_create_autocmd("VimEnter",
     { group = augroup, desc = "Set a fennel scratch buffer on load", once = true, callback = main })
+  vim.api.nvim_create_autocmd("BufLeave",
+    { group = augroup, desc = "Set a fennel scratch buffer on load", once = true, callback = exit })
 end
 
 return { setup = setup }
