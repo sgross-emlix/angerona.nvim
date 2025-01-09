@@ -1,10 +1,14 @@
 # Install
 
+```
+git clone git@gitlabintern.emlix.com:hackathon/angerona.nvim ${PLUGIN_DIR}/angerona.nvim
+```
+
 ## Lazy
 
 ```lua
 {
-  url = "https://gitlabintern.emlix.com:hackathon/angerona.nvim",
+  dir = vim.env.HOME .. "<PLUGIN_DIR>" .. "angerona.nvim",
   dependencies = {
     "nvim-lua/plenary.nvim",
   },
