@@ -11,7 +11,7 @@ function M.setup(user_config)
 	M.api_key = M.api_key
 	M.base_url = M.base_url
 
-	vim.api.nvim_create_user_command("CreateRedmineTask", function()
+	vim.api.nvim_create_user_command("RedmineCreateTask", function()
 		local parent_id = vim.fn.input("Parent Ticket ID (required): ")
 
 		if parent_id == "" then
@@ -31,9 +31,13 @@ function M.setup(user_config)
 		end)
 	end, { desc = "Create a Redmine task via REST API" })
 
-	vim.api.nvim_create_user_command("ReadRedmineTicket", function()
+	vim.api.nvim_create_user_command("RedmineReadTicket", function()
 		local ticket_id = vim.fn.input("TicketID: ")
 		M.read_ticket(ticket_id)
+	end, { desc = "Read Redmine ticket via REST API" })
+
+	vim.api.nvim_create_user_command("RedmineUpdateTicket", function()
+		M.update_ticket()
 	end, { desc = "Read Redmine ticket via REST API" })
 end
 
@@ -108,9 +112,41 @@ function M.read_ticket(ticket_id)
 		table.insert(lines, s)
 	end
 
-	local buf = vim.api.nvim_create_buf(true, true)
+	local buf = vim.api.nvim_create_buf(true, false)
+	--vim.api.nvim_buf_set_option(buf, "modifiable", true)
+	--vim.api.nvim_buf_set_option(buf, "buftype", "nofile")
 	vim.api.nvim_buf_set_name(buf, "Ticket " .. ticket_id)
-	vim.api.nvim_buf_set_lines(buf, -1, -1, true, { ticket_subject, "------------------", table.unpack(lines) })
+	vim.api.nvim_buf_set_lines(buf, 0, -1, true, { ticket_subject, "", table.unpack(lines) })
+end
+
+function M.update_ticket()
+	-- -X PUT --data-binary "@update.json" \
+	-- https://redmine.emlix.com/issues/25810.json | jq
+
+	local buf_name = vim.api.nvim_buf_get_name(0)
+	local ticket_id = string.match(buf_name, "%d%d%d%d%d")
+	print("Ticket " .. ticket_id)
+
+	local url = M.base_url .. "/issues/" .. ticket_id .. ".json"
+	local headers = {
+		["Content-Type"] = "application/json",
+		["X-Redmine-API-Key"] = M.api_key,
+		["Accept"] = "application/json",
+	}
+	local buf_subject = vim.api.nvim_buf_get_lines(0, 0, 1, true)
+	local buf_body = vim.api.nvim_buf_get_lines(0, 2, -1, true)
+
+	local body = {
+		issue = {
+			subject = buf_subject,
+			body = buf_body,
+		},
+	}
+
+	local result = http.put(url, {
+		headers = headers,
+		body = vim.fn.json_encode(body),
+	})
 end
 
 return M
