@@ -104,7 +104,7 @@ function M.read_ticket(ticket_id)
 	local ticket_subject = body_json["issue"]["subject"]
 
 	local lines = {}
-	for s in body_json["issue"]["description"]:gmatch("[^\r\n]+") do
+	for s in body_json["issue"]["description"]:gmatch("[^\n]+") do
 		table.insert(lines, s)
 	end
 
