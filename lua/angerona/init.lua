@@ -9,15 +9,50 @@ function M.setup(user_config)
     M.api_key = user_config.api_key or M.api_key
     M.base_url = user_config.base_url or M.base_url
 
-    vim.api.nvim_create_user_command('CreateRedmineTicket', function()
-        local project_id = vim.fn.input("Project ID: ")
+    vim.api.nvim_create_user_command('CreateRedmineTask', function()
+        local parent_id = vim.fn.input("Parent Ticket ID (required): ")
+
+        if parent_id == "" then
+            vim.notify("Parent Ticket ID is required.", vim.log.levels.ERROR)
+            return
+        end
+
         local subject = vim.fn.input("Subject: ")
         local description = vim.fn.input("Description: ")
-        M.create_ticket(project_id, subject, description)
-    end, { desc = "Create a Redmine ticket via REST API" })
+
+        M.get_project_id_from_parent(parent_id, function(project_id)
+            if project_id then
+                M.create_task(project_id, subject, description, parent_id)
+            else
+                vim.notify("Failed to fetch project ID from parent ticket.", vim.log.levels.ERROR)
+            end
+        end)
+    end, { desc = "Create a Redmine task via REST API" })
 end
 
-function M.create_ticket(project_id, subject, description)
+function M.get_project_id_from_parent(parent_id, callback)
+    local url = M.base_url .. "/issues/" .. parent_id .. ".json"
+    local headers = {
+        ["X-Redmine-API-Key"] = M.api_key,
+    }
+
+    local response = http.get(url, { headers = headers })
+
+    if response.status == 200 then
+        local issue = vim.fn.json_decode(response.body)
+        if issue and issue.issue and issue.issue.project and issue.issue.project.id then
+            callback(issue.issue.project.id)
+        else
+            vim.notify("Project ID not found in the parent ticket.", vim.log.levels.ERROR)
+            callback(nil)
+        end
+    else
+        vim.notify("Failed to fetch parent ticket details: " .. (response.body or "No response"), vim.log.levels.ERROR)
+        callback(nil)
+    end
+end
+
+function M.create_task(project_id, subject, description, parent_id)
     local url = M.base_url .. "/issues.json"
     local headers = {
         ["Content-Type"] = "application/json",
@@ -28,6 +63,8 @@ function M.create_ticket(project_id, subject, description)
             project_id = project_id,
             subject = subject,
             description = description,
+            tracker_id = 16,
+            parent_issue_id = tonumber(parent_id),
         }
     }
 
@@ -36,10 +73,10 @@ function M.create_ticket(project_id, subject, description)
         body = vim.fn.json_encode(body),
     })
 
-    if response.status ~= 201 then
-        vim.notify("Failed to create ticket: " .. response.body, vim.log.levels.ERROR)
+    if response.status == 201 then
+        vim.notify("Task created successfully!", vim.log.levels.INFO)
     else
-        vim.notify("Ticket created successfully!", vim.log.levels.INFO)
+        vim.notify("Failed to create task: " .. (response.body or "No response"), vim.log.levels.ERROR)
     end
 end
 
