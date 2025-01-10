@@ -1,20 +1,18 @@
 # Install
 
-```
-git clone git@gitlabintern.emlix.com:hackathon/angerona.nvim ${PLUGIN_DIR}/angerona.nvim
-```
-
 ## Lazy
 
 ```lua
 {
-  dir = vim.env.HOME .. "<PLUGIN_DIR>" .. "angerona.nvim",
+  "sgross-emlix/angerona.nvim",
   dependencies = {
     "nvim-lua/plenary.nvim",
   },
   config = function ()
-  	require('angerona').setup()
+  	require('angerona').setup({
+		api_key = "<API_KEY>",
+		base_url = "https://redmine.emlix.com",
+	})
   end
 }
-
 ```
