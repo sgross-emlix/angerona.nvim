@@ -43,7 +43,8 @@ the task at hand.
 
 `:RedmineReadTicket [TICKET_ID]`
 
-Prompt will be shown if no `TICKET_ID` was specified.
+If no `TICKET_ID` was specified it will be extracted from git branch name and a
+prompt will be shown if this also fails.
 
 A new buffer will be shown with issue subject on the first line and the
 description after a black line.

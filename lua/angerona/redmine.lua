@@ -2,8 +2,10 @@ local M = {}
 
 local request
 
+local util = require("angerona.util")
+
 local function get_ticket_id(args, desc)
-	return args[1] or vim.fn.input(desc .. " ID: ")
+	return args[1] or util.get_ticket_from_branch() or vim.fn.input(desc .. " ID: ")
 end
 
 function M.read_ticket(ticket)
