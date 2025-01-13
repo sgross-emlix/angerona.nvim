@@ -36,3 +36,14 @@ the task at hand.
 	end
 }
 ```
+
+# Usage
+
+## Read Ticket
+
+`:RedmineReadTicket [TICKET_ID]`
+
+Prompt will be shown if no `TICKET_ID` was specified.
+
+A new buffer will be shown with issue subject on the first line and the
+description after a black line.

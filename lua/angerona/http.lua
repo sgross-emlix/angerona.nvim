@@ -31,6 +31,10 @@ local function query(method, path, body)
 	return nil
 end
 
+function M.get(path)
+	return query("GET", path)
+end
+
 function M.setup(config, end_point)
 	M.base_url = config.base_url
 	M.headers = {
