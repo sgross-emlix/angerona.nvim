@@ -4,8 +4,25 @@ local request
 
 local util = require("angerona.util")
 
+local TRACKER_ID_TASK = 16
+
 local function get_ticket_id(args, desc)
 	return args[1] or util.get_ticket_from_branch() or vim.fn.input(desc .. " ID: ")
+end
+
+local function get_project_id_from_parent(parent)
+	local response = request.get(parent)
+
+	if response == nil then
+		vim.notify("Failed to get Project ID from: " .. parent, vim.log.levels.ERROR)
+		return nil
+	end
+
+	return response.issue.project.id
+end
+
+local function get_project_id(parent)
+	return get_project_id_from_parent(parent)
 end
 
 function M.read_ticket(ticket)
@@ -57,6 +74,27 @@ function M.update_ticket()
 	end
 end
 
+function M.create_task(project_id, subject, description, parent_id)
+	local body = {
+		issue = {
+			project_id = project_id,
+			subject = subject,
+			description = description,
+			tracker_id = TRACKER_ID_TASK,
+			parent_issue_id = tonumber(parent_id),
+		},
+	}
+
+	local response = request.post(nil, body)
+
+	if response == nil then
+		vim.notify("Failed to create task!", vim.log.levels.ERROR)
+		return
+	end
+
+	print("Task created: " .. response.issue.id)
+end
+
 function M.callback_read_ticket(opts)
 	local ticket = get_ticket_id(opts.fargs, "Ticket")
 	if ticket == "" then
@@ -69,6 +107,25 @@ end
 
 function M.callback_update_ticket(opts)
 	M.update_ticket()
+end
+
+function M.callback_create_task(opts)
+	local parent = get_ticket_id(opts.fargs, "Parent")
+	if parent == "" then
+		vim.notify("Parent Ticket ID is required.", vim.log.levels.ERROR)
+		return
+	end
+
+	local project = get_project_id(parent)
+	if project == nil then
+		vim.notify("Project ID is required.", vim.log.levels.ERROR)
+		return
+	end
+
+	local subject = vim.fn.input("Subject: ")
+	local description = vim.fn.input("Description: ")
+
+	M.create_task(project, subject, description, parent)
 end
 
 function M.setup(config)

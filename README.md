@@ -55,3 +55,12 @@ First get the issue buffer as described in `Read Ticket`.
 Then make your changes and call
 
 `:RedmineUpdateTicket`
+
+## Create Task
+
+`:RedmineCreateTask [TICKET_ID]`
+
+If no `TICKET_ID` was specified it will be extracted from git branch name and a
+prompt will be shown if this also fails.
+
+A prompt will be shown for subject and description.

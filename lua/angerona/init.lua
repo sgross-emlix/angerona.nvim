@@ -17,6 +17,12 @@ function M.setup(user_config)
 		redmine.callback_update_ticket,
 		{ desc = "Update Redmine ticket via REST API" }
 	)
+
+	vim.api.nvim_create_user_command(
+		"RedmineCreateTask",
+		redmine.callback_create_task,
+		{ nargs = "?", desc = "Create a Redmine task via REST API" }
+	)
 end
 
 return M

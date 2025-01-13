@@ -39,6 +39,10 @@ function M.put(path, body)
 	return query("PUT", path, body)
 end
 
+function M.post(path, body)
+	return query("POST", path, body)
+end
+
 function M.setup(config, end_point)
 	M.base_url = config.base_url
 	M.headers = {
