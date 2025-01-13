@@ -30,6 +30,33 @@ function M.read_ticket(ticket)
 	vim.api.nvim_set_current_buf(buf)
 end
 
+function M.update_ticket()
+	local buf_name = vim.api.nvim_buf_get_name(0)
+	local ticket = buf_name:match("Ticket ([%d]+)")
+
+	local buf_subject = vim.api.nvim_buf_get_lines(0, 0, 1, true)[1]
+	local lines = vim.api.nvim_buf_get_lines(0, 2, -1, true)
+
+	local buf_description = ""
+	for _, line in ipairs(lines) do
+		buf_description = buf_description .. "\n" .. line
+	end
+
+	local body = {
+		issue = {
+			subject = buf_subject,
+			description = buf_description,
+		},
+	}
+
+	local response = request.put(ticket, body)
+
+	if response == nil then
+		vim.notify("Failed to update ticket!", vim.log.levels.ERROR)
+		return
+	end
+end
+
 function M.callback_read_ticket(opts)
 	local ticket = get_ticket_id(opts.fargs, "Ticket")
 	if ticket == "" then
@@ -38,6 +65,10 @@ function M.callback_read_ticket(opts)
 	end
 
 	M.read_ticket(ticket)
+end
+
+function M.callback_update_ticket(opts)
+	M.update_ticket()
 end
 
 function M.setup(config)

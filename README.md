@@ -48,3 +48,10 @@ prompt will be shown if this also fails.
 
 A new buffer will be shown with issue subject on the first line and the
 description after a black line.
+
+## Update Ticket
+
+First get the issue buffer as described in `Read Ticket`.
+Then make your changes and call
+
+`:RedmineUpdateTicket`
