@@ -7,7 +7,18 @@ local util = require("angerona.util")
 local TRACKER_ID_TASK = 16
 
 local function get_ticket_id(args, desc)
-	return args[1] or util.get_ticket_from_branch() or vim.fn.input(desc .. " ID: ")
+	local ids = {
+		args[1],
+		util.get_ticket_from_branch(),
+	}
+
+	for _, id in pairs(ids) do
+		if id ~= nil and id ~= "" then
+			return id
+		end
+	end
+
+	return vim.fn.input(desc .. " ID: ")
 end
 
 local function get_project_id_from_parent(parent)
