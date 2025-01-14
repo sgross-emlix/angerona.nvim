@@ -45,6 +45,19 @@ function M.post(path, body)
 	return query("POST", path, body)
 end
 
+function M.open(path)
+	local url = M.base_url .. "/" .. M.end_point .. "/" .. path
+
+	vim.system({
+		"xdg-open",
+		url,
+	}, { text = true }, function(obj)
+		if obj.code ~= 0 then
+			vim.notify("Failed to open browser", vim.log.levels.ERROR)
+		end
+	end)
+end
+
 function M.setup(config, end_point)
 	M.base_url = config.base_url
 	M.headers = {

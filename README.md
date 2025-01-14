@@ -84,3 +84,9 @@ Then make your changes and call
 `:RedmineCreateTask [TICKET_ID]`
 
 A prompt will be shown for subject and description.
+
+## Open Browser
+
+`:RedmineOpen [TICKET_ID]`
+
+The redmine ticket URL will be opened for the issue provided.
