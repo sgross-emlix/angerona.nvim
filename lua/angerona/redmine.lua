@@ -8,21 +8,7 @@ local TRACKER_ID_TASK = 16
 
 M.cfg = nil
 
-local function get_ticket_id(args, desc)
-	local ids = {
-		args[1],
-		M.cfg.default_issue,
-		util.get_ticket_from_branch(),
-	}
-
-	for _, id in pairs(ids) do
-		if id ~= nil and id ~= "" then
-			return id
-		end
-	end
-
-	return vim.fn.input(desc .. " ID: ")
-end
+M.state = {}
 
 local function get_project_id_from_parent(parent)
 	local response = request.get(parent)
@@ -107,10 +93,12 @@ function M.create_task(project_id, subject, description, parent_id)
 	end
 
 	vim.notify("Task created: " .. response.issue.id, vim.log.levels.INFO)
+
+	M.state.last_created = response.issue.id
 end
 
 function M.callback_read_ticket(opts)
-	local ticket = get_ticket_id(opts.fargs, "Ticket")
+	local ticket = util.get_issue_id(M.state, "Ticket", opts.fargs)
 
 	if ticket == "" then
 		vim.notify("Ticket ID is required.", vim.log.levels.ERROR)
@@ -118,6 +106,8 @@ function M.callback_read_ticket(opts)
 	end
 
 	M.read_ticket(ticket)
+
+	M.state.last = ticket
 end
 
 function M.callback_update_ticket(opts)
@@ -125,7 +115,7 @@ function M.callback_update_ticket(opts)
 end
 
 function M.callback_create_task(opts)
-	local parent = get_ticket_id(opts.fargs, "Parent")
+	local parent = util.get_issue_id(M.state, "Parent", opts.fargs)
 	if parent == "" then
 		vim.notify("Parent Ticket ID is required.", vim.log.levels.ERROR)
 		return
@@ -146,7 +136,7 @@ end
 function M.setup(config)
 	request = require("angerona.http").setup(config, "issues")
 
-	M.cfg = util.local_config() or {}
+	M.cfg = util.local_config()
 
 	return M
 end

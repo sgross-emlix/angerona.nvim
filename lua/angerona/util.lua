@@ -3,7 +3,26 @@ local M = {}
 CFG_FILE_NAME = ".ang.cfg"
 M.cfg = nil
 
-function M.get_ticket_from_branch()
+local DEFAULT_ORDER = { "ARG", "CFG", "GIT", "BUF", "CRT", "LST" }
+
+local function parse_list(str)
+	local list = nil
+
+	if str[1] ~= nil and tonumber(str[1]) == nil then
+		if #str == 1 then
+			list = {}
+			for k in string.gmatch(str[1], "[^,]+") do
+				table.insert(list, k)
+			end
+		else
+			list = str
+		end
+	end
+
+	return list
+end
+
+local function get_ticket_from_branch()
 	local obj = vim.system({
 		"git",
 		"rev-parse",
@@ -16,6 +35,12 @@ function M.get_ticket_from_branch()
 	end
 
 	return nil
+end
+
+local function get_ticket_from_buffer()
+	local str = vim.api.nvim_buf_get_name(0)
+
+	return str:match("([%d]+)")
 end
 
 local function get_repo_root()
@@ -40,6 +65,28 @@ local function read_config(path)
 	return dofile(path .. "/" .. CFG_FILE_NAME)
 end
 
+function M.get_issue_id(state, desc, args, order)
+	local handler = {
+		["ARG"] = tonumber(args[1]),
+		["CFG"] = M.cfg.default_issue,
+		["GIT"] = get_ticket_from_branch(),
+		["BUF"] = get_ticket_from_buffer(),
+		["CRT"] = state.last_created,
+		["LST"] = state.last,
+	}
+
+	order = parse_list(args) or order or M.cfg.issue_order or DEFAULT_ORDER
+
+	for _, key in pairs(order) do
+		key = string.upper(key)
+		if handler[key] ~= nil then
+			return handler[key]
+		end
+	end
+
+	return vim.fn.input(desc .. " ID: ")
+end
+
 function M.local_config()
 	pcall(function()
 		M.cfg = read_config(get_repo_root())
@@ -50,6 +97,8 @@ function M.local_config()
 			M.cfg = read_config(vim.env.HOME)
 		end)
 	end
+
+	M.cfg = M.cfg or {}
 
 	return M.cfg
 end
