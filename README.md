@@ -52,6 +52,7 @@ See `doc/ang.cfg.example`
 ```lua
 return {
 	default_issue = 25810,
+	issue_order = { "ARG", "CFG", "GIT", "BUF", "CRT", "LST" },
 }
 ```
 
@@ -59,11 +60,10 @@ return {
 
 ## Ticket ID
 
-Where required the ticket id will be acquired by
-- positional argument to command
-- `default_issue` in config file
-- as part of git branch name
-- prompt
+Where required the ticket id will be acquired automatically.  
+The ticket id will be determined by prompt if the above fails.  
+The precedence is defined in code and can be configured by config file.  
+The values and their meaning is documented in `doc/ang.cfg.example`
 
 ## Read Ticket
 
