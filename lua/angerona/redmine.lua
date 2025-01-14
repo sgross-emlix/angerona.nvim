@@ -97,6 +97,10 @@ function M.create_task(project_id, subject, description, parent_id)
 	M.state.last_created = response.issue.id
 end
 
+function M.open_browser(ticket)
+	request.open(ticket)
+end
+
 function M.callback_read_ticket(opts)
 	local ticket = util.get_issue_id(M.state, "Ticket", opts.fargs)
 
@@ -131,6 +135,19 @@ function M.callback_create_task(opts)
 	local description = vim.fn.input("Description: ")
 
 	M.create_task(project, subject, description, parent)
+end
+
+function M.callback_open(opts)
+	local ticket = util.get_issue_id(M.state, "Ticket", opts.fargs)
+
+	if ticket == "" then
+		vim.notify("Ticket ID is required.", vim.log.levels.ERROR)
+		return
+	end
+
+	M.open_browser(ticket)
+
+	M.state.last = ticket
 end
 
 function M.setup(config)
