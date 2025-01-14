@@ -6,9 +6,12 @@ local util = require("angerona.util")
 
 local TRACKER_ID_TASK = 16
 
+M.cfg = nil
+
 local function get_ticket_id(args, desc)
 	local ids = {
 		args[1],
+		M.cfg.default_issue,
 		util.get_ticket_from_branch(),
 	}
 
@@ -142,6 +145,8 @@ end
 
 function M.setup(config)
 	request = require("angerona.http").setup(config, "issues")
+
+	M.cfg = util.local_config() or {}
 
 	return M
 end

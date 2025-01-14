@@ -37,14 +37,35 @@ the task at hand.
 }
 ```
 
+## File
+
+Angerona will look for the config file name `.ang.cfg` in the following locations:
+- root directory of the current `git` repository
+- the users <HOME> directory
+
+The file is named `.ang.cfg` and follows lua syntax.
+
+See `doc/ang.cfg.example`
+
+```lua
+return {
+	default_issue = 25810,
+}
+```
+
 # Usage
+
+## Ticket ID
+
+Where required the ticket id will be acquired by
+- positional argument to command
+- `default_issue` in config file
+- as part of git branch name
+- prompt
 
 ## Read Ticket
 
 `:RedmineReadTicket [TICKET_ID]`
-
-If no `TICKET_ID` was specified it will be extracted from git branch name and a
-prompt will be shown if this also fails.
 
 A new buffer will be shown with issue subject on the first line and the
 description after a black line.
@@ -59,8 +80,5 @@ Then make your changes and call
 ## Create Task
 
 `:RedmineCreateTask [TICKET_ID]`
-
-If no `TICKET_ID` was specified it will be extracted from git branch name and a
-prompt will be shown if this also fails.
 
 A prompt will be shown for subject and description.
