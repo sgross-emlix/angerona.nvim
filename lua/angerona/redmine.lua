@@ -92,11 +92,12 @@ function M.create_task(project_id, subject, description, parent_id)
 		return
 	end
 
-	print("Task created: " .. response.issue.id)
+	vim.notify("Task created: " .. response.issue.id, vim.log.levels.INFO)
 end
 
 function M.callback_read_ticket(opts)
 	local ticket = get_ticket_id(opts.fargs, "Ticket")
+
 	if ticket == "" then
 		vim.notify("Ticket ID is required.", vim.log.levels.ERROR)
 		return

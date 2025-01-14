@@ -17,7 +17,7 @@ local function stringify(obj)
 end
 
 function M.dump_object(obj)
-	print(stringify(obj))
+	vim.notify(stringify(obj), vim.log.levels.ERROR)
 end
 
 return M
