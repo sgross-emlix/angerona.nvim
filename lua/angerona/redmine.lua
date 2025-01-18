@@ -21,11 +21,11 @@ local function get_project_id_from_parent(parent)
 	return response.issue.project.id
 end
 
-function M.read_ticket(ticket)
-	local response = request.get(ticket)
+function M.read_issue(issue_id)
+	local response = request.get(issue_id)
 
 	if response == nil then
-		vim.notify("Failed to read : " .. ticket, vim.log.levels.ERROR)
+		vim.notify("Failed to read : " .. issue_id, vim.log.levels.ERROR)
 		return
 	end
 
@@ -36,17 +36,17 @@ function M.read_ticket(ticket)
 		table.insert(lines, s)
 	end
 
-	local buf = util.set_buffer(ticket)
+	local buf = util.set_buffer(issue_id)
 	vim.api.nvim_buf_set_lines(buf, 0, -1, true, { issue.subject, "", table.unpack(lines) })
 
 	vim.api.nvim_buf_create_user_command(0, "RedmineCommit",
-		M.update_ticket
+		M.update_issue
 		, { force = true }
 	)
 end
 
-function M.update_ticket()
-	ticket = util.get_issue_from_buf_name()
+function M.update_issue()
+	issue_id = util.get_issue_from_buf_name()
 
 	local buf_subject = vim.api.nvim_buf_get_lines(0, 0, 1, true)[1]
 	local lines = vim.api.nvim_buf_get_lines(0, 2, -1, true)
@@ -63,13 +63,13 @@ function M.update_ticket()
 		},
 	}
 
-	local response = request.put(ticket, body)
+	local response = request.put(issue_id, body)
 
 	if response == nil then
-		vim.notify("Failed to update ticket!", vim.log.levels.ERROR)
+		vim.notify("Failed to update issue!", vim.log.levels.ERROR)
 		return
 	end
-	vim.notify("Task updated: " .. ticket, vim.log.levels.INFO)
+	vim.notify("Task updated: " .. issue_id, vim.log.levels.INFO)
 end
 
 function M.create_task(project_id, parent_id)
@@ -104,32 +104,32 @@ function M.create_task(project_id, parent_id)
 	vim.api.nvim_buf_set_name(0, util.get_buf_name_from_issue(response.issue.id))
 
 	vim.api.nvim_buf_create_user_command(0, "RedmineCommit",
-		M.update_ticket
+		M.update_issue
 		, { force = true }
 	)
 end
 
-function M.open_browser(ticket)
-	request.open(ticket)
+function M.open_browser(issue_id)
+	request.open(issue_id)
 end
 
-function M.callback_read_ticket(opts)
-	local ticket = util.get_issue_id(M.state, "Ticket", opts.fargs)
+function M.callback_read(opts)
+	local issue_id = util.get_issue_id(M.state, "Issue", opts.fargs)
 
-	if ticket == "" then
-		vim.notify("Ticket ID is required.", vim.log.levels.ERROR)
+	if issue_id == "" then
+		vim.notify("Issue ID is required.", vim.log.levels.ERROR)
 		return
 	end
 
-	M.read_ticket(ticket)
+	M.read_issue(issue_id)
 
-	M.state.last = ticket
+	M.state.last = issue_id
 end
 
-function M.callback_create_task(opts)
+function M.callback_create(opts)
 	local parent = util.get_issue_id(M.state, "Parent", opts.fargs)
 	if parent == "" then
-		vim.notify("Parent Ticket ID is required.", vim.log.levels.ERROR)
+		vim.notify("Parent issue ID is required.", vim.log.levels.ERROR)
 		return
 	end
 
@@ -150,16 +150,16 @@ function M.callback_create_task(opts)
 end
 
 function M.callback_open(opts)
-	local ticket = util.get_issue_id(M.state, "Ticket", opts.fargs)
+	local issue_id = util.get_issue_id(M.state, "Issue", opts.fargs)
 
-	if ticket == "" then
-		vim.notify("Ticket ID is required.", vim.log.levels.ERROR)
+	if issue_id == "" then
+		vim.notify("issue_id ID is required.", vim.log.levels.ERROR)
 		return
 	end
 
-	M.open_browser(ticket)
+	M.open_browser(issue_id)
 
-	M.state.last = ticket
+	M.state.last = issue_id
 end
 
 function M.setup(config)

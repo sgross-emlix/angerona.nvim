@@ -23,7 +23,7 @@ local function parse_list(str)
 	return list
 end
 
-local function get_ticket_from_branch()
+local function get_issue_from_branch()
 	local obj = vim.system({
 		"git",
 		"rev-parse",
@@ -74,7 +74,7 @@ function M.get_issue_id(state, desc, args, order)
 	local handler = {
 		["ARG"] = tonumber(args[1]),
 		["CFG"] = M.cfg.default_issue,
-		["GIT"] = get_ticket_from_branch(),
+		["GIT"] = get_issue_from_branch(),
 		["BUF"] = M.get_issue_from_buf_name(),
 		["CRT"] = state.last_created,
 		["LST"] = state.last,
