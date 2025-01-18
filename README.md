@@ -68,20 +68,24 @@ The values and their meaning is documented in `doc/ang.cfg.example`
 `:RedmineReadTicket [TICKET_ID]`
 
 A new buffer will be shown with issue subject on the first line and the
-description after a black line.
+description after a blank line.
 
 ## Update Ticket
 
 First get the issue buffer as described in `Read Ticket`.
 Then make your changes and call
 
-`:RedmineUpdateTicket`
+`:RedmineCommit`
 
 ## Create Task
 
 `:RedmineCreateTask [TICKET_ID]`
 
-A prompt will be shown for subject and description.
+A new buffer will be shown where you have to put issue subject on the first line
+and the description after a blank line.
+Once you are settled finalize with
+
+`:RedmineCommit`
 
 ## Open Browser
 
