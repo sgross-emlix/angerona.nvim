@@ -29,13 +29,11 @@ the task at hand.
 	dependencies = {
 		"nvim-lua/plenary.nvim",
 	},
-	config = function ()
-		require('angerona').setup({
+	opts = {
 			api_key = "<API_KEY>",
 			base_url = "https://redmine.emlix.com",
-            insecure = false,
-	})
-	end
+			insecure = false,
+	},
 }
 ```
 
