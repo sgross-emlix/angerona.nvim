@@ -21,10 +21,6 @@ local function get_project_id_from_parent(parent)
 	return response.issue.project.id
 end
 
-local function get_project_id(parent)
-	return get_project_id_from_parent(parent)
-end
-
 function M.read_ticket(ticket)
 	local response = request.get(ticket)
 
@@ -125,7 +121,7 @@ function M.callback_create_task(opts)
 		return
 	end
 
-	local project = get_project_id(parent)
+	local project = get_project_id_from_parent(parent)
 	if project == nil then
 		vim.notify("Project ID is required.", vim.log.levels.ERROR)
 		return
