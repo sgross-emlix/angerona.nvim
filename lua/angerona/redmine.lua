@@ -72,12 +72,20 @@ function M.update_ticket()
 	vim.notify("Task updated: " .. ticket, vim.log.levels.INFO)
 end
 
-function M.create_task(project_id, subject, description, parent_id)
+function M.create_task(project_id, parent_id)
+	local buf_subject = vim.api.nvim_buf_get_lines(0, 0, 1, true)[1]
+	local lines = vim.api.nvim_buf_get_lines(0, 2, -1, true)
+
+	local buf_description = ""
+	for _, line in ipairs(lines) do
+		buf_description = buf_description .. "\n" .. line
+	end
+
 	local body = {
 		issue = {
 			project_id = project_id,
-			subject = subject,
-			description = description,
+			subject = buf_subject,
+			description = buf_description,
 			tracker_id = TRACKER_ID_TASK,
 			parent_issue_id = tonumber(parent_id),
 		},
@@ -93,6 +101,12 @@ function M.create_task(project_id, subject, description, parent_id)
 	vim.notify("Task created: " .. response.issue.id, vim.log.levels.INFO)
 
 	M.state.last_created = response.issue.id
+	vim.api.nvim_buf_set_name(0, util.get_buf_name_from_issue(response.issue.id))
+
+	vim.api.nvim_buf_create_user_command(0, "RedmineCommit",
+		M.update_ticket
+		, { force = true }
+	)
 end
 
 function M.open_browser(ticket)
@@ -125,10 +139,14 @@ function M.callback_create_task(opts)
 		return
 	end
 
-	local subject = vim.fn.input("Subject: ")
-	local description = vim.fn.input("Description: ")
+	util.set_buffer()
 
-	M.create_task(project, subject, description, parent)
+	vim.api.nvim_buf_create_user_command(0, "RedmineCommit",
+		function()
+			M.create_task(project, parent)
+		end
+		, {}
+	)
 end
 
 function M.callback_open(opts)
