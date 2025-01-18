@@ -36,16 +36,12 @@ function M.read_ticket(ticket)
 		table.insert(lines, s)
 	end
 
-	vim.cmd("tabnew")
-	local buf = vim.api.nvim_create_buf(true, true)
-	vim.api.nvim_buf_set_name(buf, "Ticket " .. ticket)
+	local buf = util.set_buffer(ticket)
 	vim.api.nvim_buf_set_lines(buf, 0, -1, true, { issue.subject, "", table.unpack(lines) })
-	vim.api.nvim_set_current_buf(buf)
 end
 
 function M.update_ticket()
-	local buf_name = vim.api.nvim_buf_get_name(0)
-	local ticket = buf_name:match("Ticket ([%d]+)")
+	ticket = util.get_issue_from_buf_name()
 
 	local buf_subject = vim.api.nvim_buf_get_lines(0, 0, 1, true)[1]
 	local lines = vim.api.nvim_buf_get_lines(0, 2, -1, true)

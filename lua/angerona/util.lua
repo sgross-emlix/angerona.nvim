@@ -1,6 +1,7 @@
 local M = {}
 
 CFG_FILE_NAME = ".ang.cfg"
+ISSUE_FILE_PREFIX = "Issue_"
 M.cfg = nil
 
 local DEFAULT_ORDER = { "ARG", "CFG", "GIT", "BUF", "CRT", "LST" }
@@ -20,10 +21,14 @@ local function get_ticket_from_branch()
 	return nil
 end
 
-local function get_ticket_from_buffer()
+function M.get_issue_from_buf_name()
 	local str = vim.api.nvim_buf_get_name(0)
 
-	return str:match("([%d]+)")
+	return str:match(ISSUE_FILE_PREFIX .. "([%d]+)$")
+end
+
+function M.get_buf_name_from_issue(issue_id)
+	return ISSUE_FILE_PREFIX .. issue_id
 end
 
 local function get_repo_root()
@@ -55,7 +60,7 @@ function M.get_issue_id(state, desc, args, order)
 		["ARG"] = tonumber(token),
 		["CFG"] = M.cfg.default_issue,
 		["GIT"] = get_ticket_from_branch(),
-		["BUF"] = get_ticket_from_buffer(),
+		["BUF"] = M.get_issue_from_buf_name(),
 		["CRT"] = state.last_created,
 		["LST"] = state.last,
 	}
@@ -70,6 +75,27 @@ function M.get_issue_id(state, desc, args, order)
 	end
 
 	return tonumber(token) or vim.fn.input(desc .. " ID: ")
+end
+
+local function buf_has_match(buf, name)
+	return vim.api.nvim_buf_get_name(buf) == vim.env.PWD .. "/" .. name
+end
+
+function M.set_buffer(issue_id)
+	local name = M.get_buf_name_from_issue(issue_id or "UNDEFINED")
+
+	for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+		if buf_has_match(buf, name) then
+			vim.api.nvim_set_current_buf(buf)
+			return 0
+		end
+	end
+
+	local buf = vim.api.nvim_create_buf(true, true)
+	vim.api.nvim_set_current_buf(buf)
+	vim.api.nvim_buf_set_name(buf, name)
+
+	return 0
 end
 
 function M.local_config()
