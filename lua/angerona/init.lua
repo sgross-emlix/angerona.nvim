@@ -7,21 +7,21 @@ function M.setup(user_config)
 	local redmine = require("angerona.redmine").setup(user_config)
 
 	vim.api.nvim_create_user_command(
-		"RedmineReadTicket",
-		redmine.callback_read_ticket,
-		{ nargs = "?", desc = "Read Redmine ticket via REST API" }
+		"RedmineRead",
+		redmine.callback_read,
+		{ nargs = "?", desc = "Read Redmine issue via REST API into dedicated buffer" }
 	)
 
 	vim.api.nvim_create_user_command(
-		"RedmineCreateTask",
-		redmine.callback_create_task,
+		"RedmineCreate",
+		redmine.callback_create,
 		{ nargs = "?", desc = "Create a Redmine task via REST API" }
 	)
 
 	vim.api.nvim_create_user_command(
 		"RedmineOpen",
 		redmine.callback_open,
-		{ nargs = "?", desc = "Open current redmine ticket URL in a web browser" }
+		{ nargs = "?", desc = "Open current redmine issue URL in a web browser" }
 	)
 end
 

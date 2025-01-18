@@ -56,30 +56,29 @@ return {
 
 # Usage
 
-## Ticket ID
+## Issue ID
 
-Where required the ticket id will be acquired automatically.  
-The ticket id will be determined by prompt if the above fails.  
+Where required the issue id will be acquired automatically or as a fallback by prompt.
 The precedence is defined in code and can be configured by config file.  
 The values and their meaning is documented in `doc/ang.cfg.example`
 
-## Read Ticket
+## Read Issue
 
-`:RedmineReadTicket [TICKET_ID]`
+`:RedmineRead [ISSUE_ID]`
 
 A new buffer will be shown with issue subject on the first line and the
 description after a blank line.
 
-## Update Ticket
+## Update Issue
 
-First get the issue buffer as described in `Read Ticket`.
+First get the issue buffer as described in `Read Issue`.
 Then make your changes and call
 
 `:RedmineCommit`
 
 ## Create Task
 
-`:RedmineCreateTask [TICKET_ID]`
+`:RedmineCreate [ISSUE_ID]`
 
 A new buffer will be shown where you have to put issue subject on the first line
 and the description after a blank line.
@@ -89,6 +88,6 @@ Once you are settled finalize with
 
 ## Open Browser
 
-`:RedmineOpen [TICKET_ID]`
+`:RedmineOpen [ISSUE_ID]`
 
-The redmine ticket URL will be opened for the issue provided.
+The redmine issue URL will be opened in a browser via `xdg-open` for the issue provided.
