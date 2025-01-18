@@ -38,6 +38,11 @@ function M.read_ticket(ticket)
 
 	local buf = util.set_buffer(ticket)
 	vim.api.nvim_buf_set_lines(buf, 0, -1, true, { issue.subject, "", table.unpack(lines) })
+
+	vim.api.nvim_buf_create_user_command(0, "RedmineCommit",
+		M.update_ticket
+		, { force = true }
+	)
 end
 
 function M.update_ticket()
@@ -64,6 +69,7 @@ function M.update_ticket()
 		vim.notify("Failed to update ticket!", vim.log.levels.ERROR)
 		return
 	end
+	vim.notify("Task updated: " .. ticket, vim.log.levels.INFO)
 end
 
 function M.create_task(project_id, subject, description, parent_id)
@@ -104,10 +110,6 @@ function M.callback_read_ticket(opts)
 	M.read_ticket(ticket)
 
 	M.state.last = ticket
-end
-
-function M.callback_update_ticket(opts)
-	M.update_ticket()
 end
 
 function M.callback_create_task(opts)

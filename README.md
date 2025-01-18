@@ -74,7 +74,7 @@ description after a black line.
 First get the issue buffer as described in `Read Ticket`.
 Then make your changes and call
 
-`:RedmineUpdateTicket`
+`:RedmineCommit`
 
 ## Create Task
 
