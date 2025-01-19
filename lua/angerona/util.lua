@@ -94,6 +94,7 @@ function M.set_buffer(issue_id)
 	local buf = vim.api.nvim_create_buf(true, true)
 	vim.api.nvim_set_current_buf(buf)
 	vim.api.nvim_buf_set_name(buf, name)
+	vim.bo.filetype = "markdown"
 
 	return 0
 end
