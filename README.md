@@ -73,7 +73,7 @@ documented in `doc/ang.cfg.example`
 `:RedmineRead [ISSUE_ID]`
 
 A new buffer will be shown with issue subject on the first line and the
-description after a black line.
+description after a blank line.
 
 ## Update Issue
 
@@ -86,7 +86,11 @@ Then make your changes and call
 
 `:RedmineCreate [ISSUE_ID]`
 
-A prompt will be shown for subject and description.
+A new buffer will be shown where you have to put issue subject on the first line
+and the description after a blank line.
+Once you are settled finalize with
+
+`:RedmineCommit`
 
 ## Open Browser
 
