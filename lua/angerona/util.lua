@@ -2,9 +2,13 @@ local M = {}
 
 CFG_FILE_NAME = ".ang.cfg"
 ISSUE_FILE_PREFIX = "Issue_"
-M.cfg = nil
 
 local DEFAULT_ORDER = { "ARG", "CFG", "GIT", "BUF", "CRT", "LST" }
+
+M.cfg = {
+	redmine = {},
+	issue_order = DEFAULT_ORDER,
+}
 
 local function get_issue_from_branch()
 	local obj = vim.system({
@@ -53,12 +57,12 @@ local function read_config(path)
 	return dofile(path .. "/" .. CFG_FILE_NAME)
 end
 
-function M.get_issue_id(state, desc, args, order)
+function M.get_issue_id(state, desc, args, default_issue)
 	local token = args[1]
 
 	local handler = {
 		["ARG"] = tonumber(token),
-		["CFG"] = M.cfg.default_issue,
+		["CFG"] = default_issue,
 		["GIT"] = get_issue_from_branch(),
 		["BUF"] = M.get_issue_from_buf_name(),
 		["CRT"] = state.last_created,
@@ -99,18 +103,38 @@ function M.set_buffer(issue_id)
 	return 0
 end
 
-function M.local_config()
-	pcall(function()
-		M.cfg = read_config(get_repo_root())
-	end)
-
-	if M.cfg == nil then
-		pcall(function()
-			M.cfg = read_config(vim.env.HOME)
-		end)
+local function merge_table(primary, fallback)
+	if not primary then
+		return fallback
 	end
 
-	M.cfg = M.cfg or {}
+	for key, value in pairs(fallback) do
+		if not primary[key] then
+			primary[key] = value
+		elseif type(value) == "table" then
+			primary[key] = merge_table(primary[key], value)
+		end
+	end
+
+	return primary
+end
+
+function M.load_config(plugin_config)
+	M.cfg = merge_table(plugin_config, M.cfg)
+
+	local user_config
+	pcall(function()
+		user_config = read_config(vim.env.HOME)
+	end)
+
+	M.cfg = merge_table(user_config, M.cfg)
+
+	local repo_config
+	pcall(function()
+		repo_config = read_config(get_repo_root())
+	end)
+
+	M.cfg = merge_table(repo_config, M.cfg)
 
 	return M.cfg
 end

@@ -114,7 +114,7 @@ function M.open_browser(issue_id)
 end
 
 function M.callback_read(opts)
-	local issue_id = util.get_issue_id(M.state, "Issue", opts.fargs)
+	local issue_id = util.get_issue_id(M.state, "Issue", opts.fargs, M.cfg.default_issue)
 
 	if issue_id == "" then
 		vim.notify("Issue ID is required.", vim.log.levels.ERROR)
@@ -127,7 +127,7 @@ function M.callback_read(opts)
 end
 
 function M.callback_create(opts)
-	local parent = util.get_issue_id(M.state, "Parent", opts.fargs)
+	local parent = util.get_issue_id(M.state, "Parent", opts.fargs, M.cfg.default_issue)
 	if parent == "" then
 		vim.notify("Parent issue ID is required.", vim.log.levels.ERROR)
 		return
@@ -150,7 +150,7 @@ function M.callback_create(opts)
 end
 
 function M.callback_open(opts)
-	local issue_id = util.get_issue_id(M.state, "Issue", opts.fargs)
+	local issue_id = util.get_issue_id(M.state, "Issue", opts.fargs, M.cfg.default_issue)
 
 	if issue_id == "" then
 		vim.notify("issue_id ID is required.", vim.log.levels.ERROR)
@@ -165,7 +165,7 @@ end
 function M.setup(config)
 	request = require("angerona.http").setup(config, "issues")
 
-	M.cfg = util.local_config()
+	M.cfg = config
 
 	return M
 end

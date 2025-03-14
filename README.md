@@ -30,9 +30,11 @@ the task at hand.
 		"nvim-lua/plenary.nvim",
 	},
 	opts = {
+		redmine = {
 			api_key = "<API_KEY>",
 			base_url = "https://redmine.emlix.com",
 			insecure = false,
+		},
 	},
 }
 ```
@@ -44,12 +46,18 @@ Angerona will look for the config file name `.ang.cfg` in the following location
 - the users <HOME> directory
 
 The file is named `.ang.cfg` and follows lua syntax.
+Keys found in the first match take precedence.
+Configuration files take precedence over install configuration.
 
 See `doc/ang.cfg.example`
 
 ```lua
 return {
-	default_issue = 25810,
+	redmine = {
+		api_key = "<API_KEY>",
+		base_url = "https://redmine.emlix.com",
+		default_issue = 25810,
+	},
 	issue_order = { "ARG", "CFG", "GIT", "BUF", "CRT", "LST" },
 }
 ```

@@ -1,9 +1,15 @@
 return {
-	-- If provided also consider this issue id
-	default_issue = 25810,
+	redmine = {
+		-- Base URL of the redmine instance without API part of the address
+		base_url = "https://redmine.emlix.com",
+		-- Authorization token for HTTP header
+		api_key = "<API_KEY>",
+		-- If provided also consider this issue id
+		default_issue = 25810,
+	},
 	-- Define the order in which the issue id is determined
 	-- 		ARG: use the provided command argument as issue id
-	-- 		CFG: use the issue id from THIS config file: `default_issue`
+	-- 		CFG: use the issue id from a config file: `default_issue`
 	-- 		GIT: use the issue id retrieved from current git branch
 	-- 		BUF: use the issue id retrieved from current buffer name
 	-- 		CRT: use the last issue id created in the active session
