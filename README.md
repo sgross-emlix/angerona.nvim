@@ -18,6 +18,7 @@ the task at hand.
 	Then find the `My Account` button in the top-right corner.
 	On the right side click on `Show` under `API access key`.
 	Copy the key and place it to your installation setup script.
+- `insecure`: allow curl to use insecure server connections, default is `false`
 
 ## Lazy
 
@@ -32,6 +33,7 @@ the task at hand.
 		require('angerona').setup({
 			api_key = "<API_KEY>",
 			base_url = "https://redmine.emlix.com",
+            insecure = false,
 	})
 	end
 }

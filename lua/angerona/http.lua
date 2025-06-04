@@ -5,6 +5,7 @@ local http = require("plenary.curl")
 M.headers = nil
 M.url = nil
 M.end_point = nil
+M.insecure = false
 
 local function query(method, path, body)
 	local url = M.base_url .. "/" .. M.end_point
@@ -19,6 +20,7 @@ local function query(method, path, body)
 		method = method,
 		headers = M.headers,
 		body = vim.fn.json_encode(body),
+		insecure = M.insecure,
 	})
 
 	if response.status == 200 or response.status == 201 or response.status == 204 then
@@ -51,6 +53,9 @@ function M.setup(config, end_point)
 		["X-Redmine-API-Key"] = config.api_key,
 	}
 	M.end_point = end_point
+	if config.insecure ~= nil then
+		M.insecure = config.insecure
+	end
 
 	return M
 end
