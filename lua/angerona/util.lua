@@ -1,9 +1,16 @@
 local M = {}
 
 CFG_FILE_NAME = ".ang.cfg"
-M.cfg = nil
+ISSUE_FILE_PREFIX = "Issue_"
 
-function M.get_ticket_from_branch()
+local DEFAULT_ORDER = { "ARG", "CFG", "GIT", "BUF", "CRT", "LST" }
+
+M.cfg = {
+	redmine = {},
+	issue_order = DEFAULT_ORDER,
+}
+
+local function get_issue_from_branch()
 	local obj = vim.system({
 		"git",
 		"rev-parse",
@@ -16,6 +23,16 @@ function M.get_ticket_from_branch()
 	end
 
 	return nil
+end
+
+function M.get_issue_from_buf_name()
+	local str = vim.api.nvim_buf_get_name(0)
+
+	return str:match(ISSUE_FILE_PREFIX .. "([%d]+)$")
+end
+
+function M.get_buf_name_from_issue(issue_id)
+	return ISSUE_FILE_PREFIX .. issue_id
 end
 
 local function get_repo_root()
@@ -40,16 +57,84 @@ local function read_config(path)
 	return dofile(path .. "/" .. CFG_FILE_NAME)
 end
 
-function M.local_config()
+function M.get_issue_id(state, desc, args, default_issue)
+	local token = args[1]
+
+	local handler = {
+		["ARG"] = tonumber(token),
+		["CFG"] = default_issue,
+		["GIT"] = get_issue_from_branch(),
+		["BUF"] = M.get_issue_from_buf_name(),
+		["CRT"] = state.last_created,
+		["LST"] = state.last,
+	}
+
+	order = token or order or M.cfg.issue_order or DEFAULT_ORDER
+
+	for _, key in pairs(order) do
+		key = string.upper(key)
+		if handler[key] ~= nil then
+			return handler[key]
+		end
+	end
+
+	return tonumber(token) or vim.fn.input(desc .. " ID: ")
+end
+
+local function buf_has_match(buf, name)
+	return vim.api.nvim_buf_get_name(buf) == vim.env.PWD .. "/" .. name
+end
+
+function M.set_buffer(issue_id)
+	local name = M.get_buf_name_from_issue(issue_id or "UNDEFINED")
+
+	for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+		if buf_has_match(buf, name) then
+			vim.api.nvim_set_current_buf(buf)
+			return 0
+		end
+	end
+
+	local buf = vim.api.nvim_create_buf(true, true)
+	vim.api.nvim_set_current_buf(buf)
+	vim.api.nvim_buf_set_name(buf, name)
+	vim.bo.filetype = "markdown"
+
+	return 0
+end
+
+local function merge_table(primary, fallback)
+	if not primary then
+		return fallback
+	end
+
+	for key, value in pairs(fallback) do
+		if not primary[key] then
+			primary[key] = value
+		elseif type(value) == "table" then
+			primary[key] = merge_table(primary[key], value)
+		end
+	end
+
+	return primary
+end
+
+function M.load_config(plugin_config)
+	M.cfg = merge_table(plugin_config, M.cfg)
+
+	local user_config
 	pcall(function()
-		M.cfg = read_config(get_repo_root())
+		user_config = read_config(vim.env.HOME)
 	end)
 
-	if M.cfg == nil then
-		pcall(function()
-			M.cfg = read_config(vim.env.HOME)
-		end)
-	end
+	M.cfg = merge_table(user_config, M.cfg)
+
+	local repo_config
+	pcall(function()
+		repo_config = read_config(get_repo_root())
+	end)
+
+	M.cfg = merge_table(repo_config, M.cfg)
 
 	return M.cfg
 end

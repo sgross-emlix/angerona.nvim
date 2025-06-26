@@ -29,13 +29,13 @@ the task at hand.
 	dependencies = {
 		"nvim-lua/plenary.nvim",
 	},
-	config = function ()
-		require('angerona').setup({
+	opts = {
+		redmine = {
 			api_key = "<API_KEY>",
 			base_url = "https://redmine.emlix.com",
-            insecure = false,
-	})
-	end
+			insecure = false,
+		},
+	},
 }
 ```
 
@@ -46,41 +46,56 @@ Angerona will look for the config file name `.ang.cfg` in the following location
 - the users <HOME> directory
 
 The file is named `.ang.cfg` and follows lua syntax.
+Keys found in the first match take precedence.
+Configuration files take precedence over install configuration.
 
 See `doc/ang.cfg.example`
 
 ```lua
 return {
-	default_issue = 25810,
+	redmine = {
+		api_key = "<API_KEY>",
+		base_url = "https://redmine.emlix.com",
+		default_issue = 25810,
+	},
+	issue_order = { "ARG", "CFG", "GIT", "BUF", "CRT", "LST" },
 }
 ```
 
 # Usage
 
-## Ticket ID
+## Issue ID
 
-Where required the ticket id will be acquired by
-- positional argument to command
-- `default_issue` in config file
-- as part of git branch name
-- prompt
+Where required the issue id will be acquired automatically or as a fallback by prompt.
+The precedence is defined in code and can be configured by config file.  
+The values and their meaning is documented in `doc/ang.cfg.example`
 
-## Read Ticket
+## Read Issue
 
-`:RedmineReadTicket [TICKET_ID]`
+`:RedmineRead [ISSUE_ID]`
 
 A new buffer will be shown with issue subject on the first line and the
-description after a black line.
+description after a blank line.
 
-## Update Ticket
+## Update Issue
 
-First get the issue buffer as described in `Read Ticket`.
+First get the issue buffer as described in `Read Issue`.
 Then make your changes and call
 
-`:RedmineUpdateTicket`
+`:RedmineCommit`
 
 ## Create Task
 
-`:RedmineCreateTask [TICKET_ID]`
+`:RedmineCreate [ISSUE_ID]`
 
-A prompt will be shown for subject and description.
+A new buffer will be shown where you have to put issue subject on the first line
+and the description after a blank line.
+Once you are settled finalize with
+
+`:RedmineCommit`
+
+## Open Browser
+
+`:RedmineOpen [ISSUE_ID]`
+
+The redmine issue URL will be opened in a browser via `xdg-open` for the issue provided.

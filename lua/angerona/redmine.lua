@@ -8,21 +8,7 @@ local TRACKER_ID_TASK = 16
 
 M.cfg = nil
 
-local function get_ticket_id(args, desc)
-	local ids = {
-		args[1],
-		M.cfg.default_issue,
-		util.get_ticket_from_branch(),
-	}
-
-	for _, id in pairs(ids) do
-		if id ~= nil and id ~= "" then
-			return id
-		end
-	end
-
-	return vim.fn.input(desc .. " ID: ")
-end
+M.state = {}
 
 local function get_project_id_from_parent(parent)
 	local response = request.get(parent)
@@ -35,15 +21,11 @@ local function get_project_id_from_parent(parent)
 	return response.issue.project.id
 end
 
-local function get_project_id(parent)
-	return get_project_id_from_parent(parent)
-end
-
-function M.read_ticket(ticket)
-	local response = request.get(ticket)
+function M.read_issue(issue_id)
+	local response = request.get(issue_id)
 
 	if response == nil then
-		vim.notify("Failed to read : " .. ticket, vim.log.levels.ERROR)
+		vim.notify("Failed to read : " .. issue_id, vim.log.levels.ERROR)
 		return
 	end
 
@@ -54,16 +36,17 @@ function M.read_ticket(ticket)
 		table.insert(lines, s)
 	end
 
-	vim.cmd("tabnew")
-	local buf = vim.api.nvim_create_buf(true, true)
-	vim.api.nvim_buf_set_name(buf, "Ticket " .. ticket)
+	local buf = util.set_buffer(issue_id)
 	vim.api.nvim_buf_set_lines(buf, 0, -1, true, { issue.subject, "", table.unpack(lines) })
-	vim.api.nvim_set_current_buf(buf)
+
+	vim.api.nvim_buf_create_user_command(0, "RedmineCommit",
+		M.update_issue
+		, { force = true }
+	)
 end
 
-function M.update_ticket()
-	local buf_name = vim.api.nvim_buf_get_name(0)
-	local ticket = buf_name:match("Ticket ([%d]+)")
+function M.update_issue()
+	issue_id = util.get_issue_from_buf_name()
 
 	local buf_subject = vim.api.nvim_buf_get_lines(0, 0, 1, true)[1]
 	local lines = vim.api.nvim_buf_get_lines(0, 2, -1, true)
@@ -80,20 +63,29 @@ function M.update_ticket()
 		},
 	}
 
-	local response = request.put(ticket, body)
+	local response = request.put(issue_id, body)
 
 	if response == nil then
-		vim.notify("Failed to update ticket!", vim.log.levels.ERROR)
+		vim.notify("Failed to update issue!", vim.log.levels.ERROR)
 		return
 	end
+	vim.notify("Task updated: " .. issue_id, vim.log.levels.INFO)
 end
 
-function M.create_task(project_id, subject, description, parent_id)
+function M.create_task(project_id, parent_id)
+	local buf_subject = vim.api.nvim_buf_get_lines(0, 0, 1, true)[1]
+	local lines = vim.api.nvim_buf_get_lines(0, 2, -1, true)
+
+	local buf_description = ""
+	for _, line in ipairs(lines) do
+		buf_description = buf_description .. "\n" .. line
+	end
+
 	local body = {
 		issue = {
 			project_id = project_id,
-			subject = subject,
-			description = description,
+			subject = buf_subject,
+			description = buf_description,
 			tracker_id = TRACKER_ID_TASK,
 			parent_issue_id = tonumber(parent_id),
 		},
@@ -107,46 +99,73 @@ function M.create_task(project_id, subject, description, parent_id)
 	end
 
 	vim.notify("Task created: " .. response.issue.id, vim.log.levels.INFO)
+
+	M.state.last_created = response.issue.id
+	vim.api.nvim_buf_set_name(0, util.get_buf_name_from_issue(response.issue.id))
+
+	vim.api.nvim_buf_create_user_command(0, "RedmineCommit",
+		M.update_issue
+		, { force = true }
+	)
 end
 
-function M.callback_read_ticket(opts)
-	local ticket = get_ticket_id(opts.fargs, "Ticket")
+function M.open_browser(issue_id)
+	request.open(issue_id)
+end
 
-	if ticket == "" then
-		vim.notify("Ticket ID is required.", vim.log.levels.ERROR)
+function M.callback_read(opts)
+	local issue_id = util.get_issue_id(M.state, "Issue", opts.fargs, M.cfg.default_issue)
+
+	if issue_id == "" then
+		vim.notify("Issue ID is required.", vim.log.levels.ERROR)
 		return
 	end
 
-	M.read_ticket(ticket)
+	M.read_issue(issue_id)
+
+	M.state.last = issue_id
 end
 
-function M.callback_update_ticket(opts)
-	M.update_ticket()
-end
-
-function M.callback_create_task(opts)
-	local parent = get_ticket_id(opts.fargs, "Parent")
+function M.callback_create(opts)
+	local parent = util.get_issue_id(M.state, "Parent", opts.fargs, M.cfg.default_issue)
 	if parent == "" then
-		vim.notify("Parent Ticket ID is required.", vim.log.levels.ERROR)
+		vim.notify("Parent issue ID is required.", vim.log.levels.ERROR)
 		return
 	end
 
-	local project = get_project_id(parent)
+	local project = get_project_id_from_parent(parent)
 	if project == nil then
 		vim.notify("Project ID is required.", vim.log.levels.ERROR)
 		return
 	end
 
-	local subject = vim.fn.input("Subject: ")
-	local description = vim.fn.input("Description: ")
+	util.set_buffer()
 
-	M.create_task(project, subject, description, parent)
+	vim.api.nvim_buf_create_user_command(0, "RedmineCommit",
+		function()
+			M.create_task(project, parent)
+		end
+		, {}
+	)
+end
+
+function M.callback_open(opts)
+	local issue_id = util.get_issue_id(M.state, "Issue", opts.fargs, M.cfg.default_issue)
+
+	if issue_id == "" then
+		vim.notify("issue_id ID is required.", vim.log.levels.ERROR)
+		return
+	end
+
+	M.open_browser(issue_id)
+
+	M.state.last = issue_id
 end
 
 function M.setup(config)
 	request = require("angerona.http").setup(config, "issues")
 
-	M.cfg = util.local_config() or {}
+	M.cfg = config
 
 	return M
 end
