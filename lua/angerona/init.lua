@@ -1,32 +1,54 @@
 local M = {}
 
+DEFAULT_BACKEND = "redmine"
+
 -- compability
 table.unpack = table.unpack or unpack
 
 local util = require("angerona.util")
 
+local function setup_backend(backend, config)
+	local class = require("angerona." .. backend)
+
+	if not class then
+		vim.notify("backend" .. backend .. "not implemented")
+		return
+	end
+
+	class.setup(config)
+
+	local name = backend:sub(1, 1):upper() .. backend:sub(2)
+
+	vim.api.nvim_create_user_command(
+		name .. "Read",
+		class.callback_read,
+		{ nargs = "?", desc = "Read " .. name .. " issue via REST API into dedicated buffer" }
+	)
+
+	vim.api.nvim_create_user_command(
+		name .. "Create",
+		class.callback_create,
+		{ nargs = "?", desc = "Create a " .. name .. " task via REST API" }
+	)
+
+	vim.api.nvim_create_user_command(
+		name .. "Open",
+		class.callback_open,
+		{ nargs = "?", desc = "Open current " .. name .. " issue URL in a web browser" }
+	)
+end
+
 function M.setup(plugin_config)
 	M.cfg = util.load_config(plugin_config)
 
-	local redmine = require("angerona.redmine").setup(M.cfg.redmine)
+	if M.cfg.backends == nil then
+		setup_backend(DEFAULT_BACKEND, M.cfg[DEFAULT_BACKEND])
+	else
+		for backend, cfg in pairs(M.cfg.backends) do
+				setup_backend(backend, cfg)
+		end
+	end
 
-	vim.api.nvim_create_user_command(
-		"RedmineRead",
-		redmine.callback_read,
-		{ nargs = "?", desc = "Read Redmine issue via REST API into dedicated buffer" }
-	)
-
-	vim.api.nvim_create_user_command(
-		"RedmineCreate",
-		redmine.callback_create,
-		{ nargs = "?", desc = "Create a Redmine task via REST API" }
-	)
-
-	vim.api.nvim_create_user_command(
-		"RedmineOpen",
-		redmine.callback_open,
-		{ nargs = "?", desc = "Open current redmine issue URL in a web browser" }
-	)
 end
 
 return M

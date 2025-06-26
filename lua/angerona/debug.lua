@@ -4,7 +4,7 @@ local function stringify(obj)
 	if type(obj) == "table" then
 		local str = "{ "
 		for k, v in pairs(obj) do
-			str = str .. "[" .. k .. "] = " .. stringify(v) .. ","
+			str = str .. "[" .. k .. "] = " .. stringify(v) .. "," .. "\n"
 		end
 		return str .. "} "
 	else
